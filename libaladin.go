@@ -1,4 +1,4 @@
-package libaladin
+package main
 
 import (
 	"encoding/json"
@@ -189,8 +189,8 @@ func makeQuery(querytype string, key string, page int) string {
 }
 
 func GetBook(isbn string) Book {
-	fmt.Println(fmt.Sprintf(makeQuery("item", myttb, 1), isbn))
-	resp, err := http.Get(fmt.Sprintf(makeQuery("item", myttb, 1), isbn))
+	fmt.Println(fmt.Sprintf(makeQuery("itemISBN", myttb, 1), isbn))
+	resp, err := http.Get(fmt.Sprintf(makeQuery("itemISBN", myttb, 1), isbn))
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
@@ -200,8 +200,8 @@ func GetBook(isbn string) Book {
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
-	bookjson := fmt.Sprintf("%s", data)
-	fmt.Println(bookjson)
+	//bookjson := fmt.Sprintf("%s", data)
+	//fmt.Println(bookjson)
 	var result ItemResult
 	error := json.Unmarshal(data, &result)
 	if error != nil {
