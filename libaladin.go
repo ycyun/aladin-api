@@ -1,4 +1,4 @@
-package main
+package libaladin
 
 import (
 	"encoding/json"
