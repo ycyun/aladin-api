@@ -8,7 +8,7 @@ import (
 )
 
 func TestAll(t *testing.T) {
-	_book := GetBook("K622730603")
+	_book := SearchBookAuthor("카와하라 레키")
 	//book, _ := json.MarshalIndent(_book, "", "  ")
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
@@ -16,7 +16,7 @@ func TestAll(t *testing.T) {
 	encoder.SetIndent("", "  ")
 	err := encoder.Encode(_book)
 	if err != nil {
-		fmt.Errorf("err!!!: %v\n", err)
+		_ = fmt.Errorf("err!!!: %v\n", err)
 	}
 	fmt.Printf("%s\n", buffer.Bytes())
 }

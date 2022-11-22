@@ -3,6 +3,7 @@ package libaladin
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -183,7 +184,7 @@ func SortBooksByID(books []Book) {
 }
 
 func makeQuery(querytype string, key string, page int) string {
-	ret := strings.Replace(apis[querytype], "{apikey}", key, 1)
+	ret := strings.Replace(apis[querytype], "{apikey}", html.EscapeString(key), 1)
 	ret = strings.Replace(ret, "{page}", fmt.Sprint(page), 1)
 	return ret
 }
@@ -210,32 +211,38 @@ func GetBook(isbn string) Book {
 	//b, _ := json.MarshalIndent(result, "", "  ")
 	//fmt.Printf("book: %v\n", string(b))
 	book := result.Item[0]
+	book.Link = html.UnescapeString(book.Link)
 	return book
 }
 
-func SearchBookAuthor(id int) []Book {
-	resp, err := http.Get(fmt.Sprintf(makeQuery("searchAuthor", myttb, 1), id))
+func SearchBookAuthor(authorname string) []Book {
+	query := fmt.Sprintf(makeQuery("searchAuthor", myttb, 1), url.QueryEscape(authorname))
+	resp, err := http.Get(query)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err:  %v\n with query %v", err, query)
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err: %v\n with resp %v", err, resp)
 	}
 	//bookjson := fmt.Sprintf("%s", string(data))
 	var result ItemResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err: %v\n with result %v", err, result)
 	}
 	if len(result.Item) == result.ItemsPerPage {
-		Item := SearchBookAuthors(id, 2)
+		Item := SearchBookAuthors(authorname, 2)
 		result.Item = append(result.Item, Item...)
 	}
 	//books_ :=
 	SortBooksByTitle(result.Item)
+	for i, item := range result.Item {
+		item.Link = html.UnescapeString(item.Link)
+		result.Item[i] = item
+	}
 	return result.Item
 }
 
@@ -262,11 +269,15 @@ func SearchBook(name string) []Book {
 	}
 	//books_ :=
 	SortBooksByTitle(result.Item)
+	for i, item := range result.Item {
+		item.Link = html.UnescapeString(item.Link)
+		result.Item[i] = item
+	}
 	return result.Item
 }
 
 func SearchBooks(name string, page int) []Book {
-	fmt.Println(fmt.Sprintf(makeQuery("search", myttb, page), url.QueryEscape(name)))
+	//fmt.Println(fmt.Sprintf(makeQuery("search", myttb, page), url.QueryEscape(name)))
 	resp, err := http.Get(fmt.Sprintf(makeQuery("search", myttb, page), url.QueryEscape(name)))
 	if err != nil {
 		fmt.Printf("err: %v", err)
@@ -291,27 +302,28 @@ func SearchBooks(name string, page int) []Book {
 	return result.Item
 }
 
-func SearchBookAuthors(id int, page int) []Book {
-	fmt.Println(fmt.Sprintf(makeQuery("searchAuthor", myttb, page), id))
-	resp, err := http.Get(fmt.Sprintf(makeQuery("searchAuthor", myttb, page), id))
+func SearchBookAuthors(authorname string, page int) []Book {
+	query := fmt.Sprintf(makeQuery("searchAuthor", myttb, page), url.QueryEscape(authorname))
+	//fmt.Println(query)
+	resp, err := http.Get(query)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err: %v\n with query %v", err, query)
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err: %v\n with resp %v", err, resp)
 	}
 	//bookjson := fmt.Sprintf("%s", string(data))
 	var result ItemResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		fmt.Errorf("err: %v\n with result %v", err, result)
 	}
 
 	if len(result.Item) == result.ItemsPerPage && page <= 4 {
-		Item := SearchBookAuthors(id, page+1)
+		Item := SearchBookAuthors(authorname, page+1)
 		result.Item = append(result.Item, Item...)
 	}
 	return result.Item
