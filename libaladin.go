@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -195,7 +196,12 @@ func GetBook(isbn string) Book {
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -204,8 +210,8 @@ func GetBook(isbn string) Book {
 	//bookjson := fmt.Sprintf("%s", data)
 	//fmt.Println(bookjson)
 	var result ItemResult
-	error := json.Unmarshal(data, &result)
-	if error != nil {
+	err = json.Unmarshal(data, &result)
+	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
 	//b, _ := json.MarshalIndent(result, "", "  ")
@@ -219,19 +225,24 @@ func SearchBookAuthor(authorname string) []Book {
 	query := fmt.Sprintf(makeQuery("searchAuthor", myttb, 1), url.QueryEscape(authorname))
 	resp, err := http.Get(query)
 	if err != nil {
-		fmt.Errorf("err:  %v\n with query %v", err, query)
+		_ = fmt.Errorf("err:  %v\n with query %v", err, query)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Errorf("err: %v\n with resp %v", err, resp)
+		_ = fmt.Errorf("err: %v\n with resp %v", err, resp)
 	}
 	//bookjson := fmt.Sprintf("%s", string(data))
 	var result ItemResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		fmt.Errorf("err: %v\n with result %v", err, result)
+		_ = fmt.Errorf("err: %v\n with result %v", err, result)
 	}
 	if len(result.Item) == result.ItemsPerPage {
 		Item := SearchBookAuthors(authorname, 2)
@@ -251,17 +262,22 @@ func SearchBook(name string) []Book {
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		_ = fmt.Errorf("err: %v", err)
 	}
 	//bookjson := fmt.Sprintf("%s", string(data))
 	var result ItemResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		fmt.Printf("err: %v", err)
+		_ = fmt.Errorf("err: %v", err)
 	}
 	if len(result.Item) == result.ItemsPerPage {
 		Item := SearchBooks(name, 2)
@@ -282,7 +298,12 @@ func SearchBooks(name string, page int) []Book {
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -307,19 +328,24 @@ func SearchBookAuthors(authorname string, page int) []Book {
 	//fmt.Println(query)
 	resp, err := http.Get(query)
 	if err != nil {
-		fmt.Errorf("err: %v\n with query %v", err, query)
+		_ = fmt.Errorf("err: %v\n with query %v", err, query)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Errorf("err: %v\n with resp %v", err, resp)
+		_ = fmt.Errorf("err: %v\n with resp %v", err, resp)
 	}
 	//bookjson := fmt.Sprintf("%s", string(data))
 	var result ItemResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		fmt.Errorf("err: %v\n with result %v", err, result)
+		_ = fmt.Errorf("err: %v\n with result %v", err, result)
 	}
 
 	if len(result.Item) == result.ItemsPerPage && page <= 4 {
@@ -327,8 +353,4 @@ func SearchBookAuthors(authorname string, page int) []Book {
 		result.Item = append(result.Item, Item...)
 	}
 	return result.Item
-}
-func Hello(name string) string {
-	s := fmt.Sprintf("Hello, %v", name)
-	return s
 }
